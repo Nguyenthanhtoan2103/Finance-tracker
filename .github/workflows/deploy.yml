@@ -30,7 +30,7 @@ jobs:
         run: npm install
         working-directory: backend
 
-      - name: Build (nếu cần)
+      - name: Build 
         run: npm run build --if-present
         working-directory: backend
 
