@@ -1,0 +1,41 @@
+{
+  "name": "finance-tracker-backend",
+  "version": "1.0.0",
+  "description": "Personal Finance Tracker API with Node.js, Express, MongoDB",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon backend/index.js"
+  },
+  "keywords": [
+    "finance",
+    "tracker",
+    "nodejs",
+    "express",
+    "mongodb",
+    "api"
+  ],
+  "author": "Nguyen Thanh Toan",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "bcryptjs": "^2.4.3",
+    "chart.js": "^4.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.30.1",
+    "mongoose": "^7.6.0",
+    "morgan": "^1.10.1",
+    "pdfkit": "^0.17.2",
+    "react-chartjs-2": "^5.3.0",
+    "react-router-dom": "^7.9.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
