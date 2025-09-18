@@ -2,9 +2,7 @@ const PDFDocument = require("pdfkit");
 const ExcelJS = require("exceljs");
 const Transaction = require("../models/transaction");
 
-/**
- * Helper: lấy userId từ req.user (hỗ trợ req.user._id hoặc req.user.id)
- */
+
 const getUserId = (req) => {
   if (!req.user) return null;
   return req.user._id || req.user.id || req.user;
