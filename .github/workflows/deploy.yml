@@ -6,46 +6,40 @@
 # This workflow integrates njsscan with GitHub's Code Scanning feature
 # nodejsscan is a static security code scanner that finds insecure code patterns in your Node.js applications
 
-name: Deploy Backend to Windows VPS
+name: CI/CD Demo
 
 on:
   push:
     branches:
-      - main
+      - main   
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+    
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          node-version: '18'
+          token: ${{ secrets.GH_TOKEN }}
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: backend
-
-      - name: Build 
-        run: npm run build --if-present
-        working-directory: backend
-
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.3
+    
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            cd C:\inetpub\backend
-            git pull origin main
-            cd backend
-            npm install --production
-            pm2 restart backend || pm2 start index.js --name backend
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+
+      - name: Deploy
+        run: echo "Triển khai ở đây (scp, rsync, docker, v.v.)"
 
 
