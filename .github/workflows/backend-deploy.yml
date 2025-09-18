@@ -6,7 +6,7 @@
 # This workflow integrates njsscan with GitHub's Code Scanning feature
 # nodejsscan is a static security code scanner that finds insecure code patterns in your Node.js applications
 
-name: Deploy Backend
+name: Deploy Backend (No Docker)
 
 on:
   push:
@@ -14,31 +14,18 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # B1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # B2: Login DockerHub
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Run tests
+        run: |
+          npm install
+          npm test
 
-      # B3: Build & Push Docker image
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./backend
-          file: ./backend/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/finance-backend:latest
-
-      # B4: Deploy lên VPS
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -46,8 +33,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/finance-backend:latest
-            docker stop backend || true
-            docker rm backend || true
-            docker run -d --name backend -p 5000:5000 ${{ secrets.DOCKER_USERNAME }}/finance-backend:latest
-
+            cd C:/Users/ACER/Desktop/finance-backend
+            git pull origin main
+            npm install --production
+            pm2 restart backend
