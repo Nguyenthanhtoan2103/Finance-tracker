@@ -6,48 +6,35 @@
 # This workflow integrates njsscan with GitHub's Code Scanning feature
 # nodejsscan is a static security code scanner that finds insecure code patterns in your Node.js applications
 
-name: Deploy Backend
+name: NodeChef Deploy
 
 on:
   push:
     branches:
-      - main
+      - main 
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # B1: Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # B2: Login DockerHub
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
 
-      # B3: Build & Push Docker image
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./backend
-          file: ./backend/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/finance-backend:latest
-
-      # B4: Deploy lên VPS
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/finance-backend:latest
-            docker stop backend || true
-            docker rm backend || true
-            docker run -d --name backend -p 5000:5000 ${{ secrets.DOCKER_USERNAME }}/finance-backend:latest
-
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Deploy to NodeChef
+      env:
+        DEPLOY_USER: ${{ secrets.NODECHEF_USER }}
+        DEPLOY_PASSWORD: ${{ secrets.NODECHEF_PASSWORD }}
+        APP_NAME: ${{ secrets.NODECHEF_APP }}
+        APP_SERVER: ${{ secrets.NODECHEF_HOST }}
+      run: |
+        curl -u $DEPLOY_USER:$DEPLOY_PASSWORD \
+        -X POST https://$APP_SERVER/api/deploy/$APP_NAME
