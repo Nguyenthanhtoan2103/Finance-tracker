@@ -36,7 +36,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          privateKey: ${{ secrets.VPS_PRIVATE_KEY }}
+          privateKey: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           command: |
             cd C:\\finance-tracker
