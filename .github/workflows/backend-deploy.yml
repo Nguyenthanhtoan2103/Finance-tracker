@@ -32,13 +32,13 @@ jobs:
         run: docker push ghcr.io/nguyenthanhtoan2103/finance-tracker:latest
 
       - name: Deploy to Windows VPS via SSH
-        uses: appleboy/ssh-action@v0.1.10
+        uses: garygrossgarten/github-action-ssh@release
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           port: 22
-          script: |
+          command: |
             cd C:\finance-tracker
             docker compose pull
             docker compose up -d --build
