@@ -6,35 +6,40 @@
 # This workflow integrates njsscan with GitHub's Code Scanning feature
 # nodejsscan is a static security code scanner that finds insecure code patterns in your Node.js applications
 
-name: NodeChef Deploy
+name: CI/CD to VPS (Windows 2019)
 
 on:
   push:
     branches:
-      - main 
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}/finance-tracker:latest ./backend
 
-    - name: Install dependencies
-      run: npm install
-      
-    - name: Deploy to NodeChef
-      env:
-        DEPLOY_USER: ${{ secrets.NODECHEF_USER }}
-        DEPLOY_PASSWORD: ${{ secrets.NODECHEF_PASSWORD }}
-        APP_NAME: ${{ secrets.NODECHEF_APP }}
-        APP_SERVER: ${{ secrets.NODECHEF_HOST }}
-      run: |
-        curl -u $DEPLOY_USER:$DEPLOY_PASSWORD \
-        -X POST https://$APP_SERVER/api/deploy/$APP_NAME
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push image to GitHub Container Registry
+        run: docker push ghcr.io/${{ github.repository }}/finance-tracker:latest
+
+      - name: Deploy to Windows VPS via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASS }}
+          port: 22
+          script: |
+            cd C:\finance-tracker
+            docker compose pull
+            docker compose up -d --build
+
