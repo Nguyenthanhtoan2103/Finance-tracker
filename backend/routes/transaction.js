@@ -5,7 +5,7 @@ const {
   createTransaction,
   getTransactions,
   deleteTransaction,
-  updateTransaction, // import thêm hàm update
+  updateTransaction,
 } = require('../controllers/transactionController');
 
 /**
@@ -13,6 +13,54 @@ const {
  * tags:
  *   name: Transactions
  *   description: API for managing user transactions
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Transaction:
+ *       type: object
+ *       required:
+ *         - type
+ *         - category
+ *         - amount
+ *         - date
+ *         - paymentMethod
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: Auto-generated ID
+ *         user:
+ *           type: string
+ *           description: Reference to User ID
+ *         type:
+ *           type: string
+ *           enum: [income, expense]
+ *           description: Transaction type
+ *         category:
+ *           type: string
+ *           description: Transaction category (e.g., Food, Salary)
+ *         amount:
+ *           type: number
+ *           description: Transaction amount (must be > 0)
+ *         description:
+ *           type: string
+ *           description: Optional note/description
+ *         date:
+ *           type: string
+ *           format: date
+ *           description: Date of transaction
+ *         paymentMethod:
+ *           type: string
+ *           enum: [cash, credit, bank, ewallet]
+ *           description: Payment method used
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
  */
 
 /**
