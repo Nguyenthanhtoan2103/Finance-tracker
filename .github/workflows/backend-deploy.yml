@@ -78,7 +78,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_PRIVATE_KEY }}
-          source: "./backend/docker-compose.yml"
+          source: "backend/docker-compose.yml"
           target: "/home/Finance-tracker/backend/docker-compose.yml"
 
       # -------------------------------
