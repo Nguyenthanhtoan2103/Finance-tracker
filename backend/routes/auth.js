@@ -8,7 +8,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Auth
- *   description: User authentication
+ *   description: User authentication APIs (Register, Login, Google OAuth2)
  */
 
 /**
@@ -16,6 +16,7 @@ const router = express.Router();
  * /api/auth/register:
  *   post:
  *     summary: Register a new user
+ *     description: Create a new account with username, email, and password.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -30,10 +31,13 @@ const router = express.Router();
  *             properties:
  *               username:
  *                 type: string
+ *                 example: johndoe
  *               email:
  *                 type: string
+ *                 example: johndoe@example.com
  *               password:
- *                 type: string           
+ *                 type: string
+ *                 example: mysecurepassword
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -47,6 +51,7 @@ router.post("/register", register);
  * /api/auth/login:
  *   post:
  *     summary: Login a user
+ *     description: Authenticate a user with email and password. Returns JWT token.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -77,10 +82,11 @@ router.post("/login", login);
  * /api/auth/google:
  *   get:
  *     summary: Login with Google OAuth2
+ *     description: Redirects the user to Google for OAuth2 login.
  *     tags: [Auth]
  *     responses:
  *       302:
- *         description: Redirects to Google for authentication
+ *         description: Redirects to Google OAuth2 login screen
  */
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
@@ -89,13 +95,18 @@ router.get("/google", passport.authenticate("google", { scope: ["profile", "emai
  * /api/auth/google/callback:
  *   get:
  *     summary: Google OAuth2 callback
+ *     description: Google redirects here after successful login. Backend will create a JWT token and redirect user to the frontend with that token.
  *     tags: [Auth]
  *     responses:
- *       200:
- *         description: Successful Google authentication (returns JWT via redirect)
+ *       302:
+ *         description: Redirects to frontend with JWT token in query string
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized (OAuth2 failed)
  */
-router.get("/google/callback", passport.authenticate("google", { failureRedirect: "/" }), googleCallback);
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { failureRedirect: "/" }),
+  googleCallback
+);
 
 module.exports = router;
