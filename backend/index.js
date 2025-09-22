@@ -5,13 +5,17 @@ const morgan = require('morgan');
 const connectDB = require('./config/db');
 const { swaggerUi, specs } = require("./swagger");
 const rateLimit = require('express-rate-limit');
-const http = require('http');         // <-- thêm
-const { Server } = require('socket.io'); // <-- thêm
+const http = require('http');
+const { Server } = require('socket.io');
+const session = require("express-session");   // <-- thêm
+const passport = require("passport");         // <-- thêm
+
+require("./config/passport"); // <-- load config Google OAuth2
 
 dotenv.config({ path: __dirname + '/.env' });
 
 const app = express();
-const server = http.createServer(app); // <-- dùng http server thay cho app.listen
+const server = http.createServer(app);
 
 // connect DB
 connectDB();
@@ -19,9 +23,18 @@ connectDB();
 // middleware
 app.use(express.json());
 
+// Session (cho Passport OAuth2)
+app.use(session({
+  secret: process.env.SESSION_SECRET || "mysecret",
+  resave: false,
+  saveUninitialized: true
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Rate Limiter: giới hạn 60 request / 1 phút / IP
 const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, 
+  windowMs: 1 * 60 * 1000,
   max: 60,
   message: { status: 429, message: "Too many requests, please try again later." },
 });
@@ -31,14 +44,14 @@ app.use(limiter);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.get("/api-docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
-  res.send(specs); 
+  res.send(specs);
 });
 
 app.use(cors());
 app.use(morgan('dev'));
 
 // routes
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth'));   // <-- có cả Google OAuth2
 app.use('/api/transactions', require('./routes/transaction'));
 app.use('/api/reports', require('./routes/report'));
 app.use('/api/budgets', require('./routes/budget'));
@@ -46,7 +59,7 @@ app.use('/api/budgets', require('./routes/budget'));
 // --- Socket.IO setup ---
 const io = new Server(server, {
   cors: {
-    origin: "*", 
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
@@ -64,6 +77,5 @@ app.set("io", io);
 
 const PORT = process.env.PORT || 80;
 server.listen(PORT, '0.0.0.0', () =>
- console.log(`🚀 Server running at http://0.0.0.0:${PORT}`)
-
+  console.log(`🚀 Server running at http://0.0.0.0:${PORT}`)
 );

@@ -1,6 +1,8 @@
-const express = require('express');
+const express = require("express");
+const passport = require("passport");
+const { register, login, googleCallback } = require("../controllers/authController");
+
 const router = express.Router();
-const { register, login } = require('../controllers/authController');
 
 /**
  * @swagger
@@ -38,7 +40,7 @@ const { register, login } = require('../controllers/authController');
  *       400:
  *         description: Invalid input
  */
-router.post('/register', register);
+router.post("/register", register);
 
 /**
  * @swagger
@@ -68,6 +70,32 @@ router.post('/register', register);
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', login);
+router.post("/login", login);
+
+/**
+ * @swagger
+ * /api/auth/google:
+ *   get:
+ *     summary: Login with Google OAuth2
+ *     tags: [Auth]
+ *     responses:
+ *       302:
+ *         description: Redirects to Google for authentication
+ */
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+/**
+ * @swagger
+ * /api/auth/google/callback:
+ *   get:
+ *     summary: Google OAuth2 callback
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Successful Google authentication (returns JWT via redirect)
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/google/callback", passport.authenticate("google", { failureRedirect: "/" }), googleCallback);
 
 module.exports = router;
