@@ -33,21 +33,18 @@ jobs:
           echo "===== DEBUG INPUT VALUES ====="
           echo "VPS_HOST: ${{ secrets.VPS_HOST }}"
           echo "VPS_USER: ${{ secrets.VPS_USER }}"
-
           if [ -n "${{ secrets.VPS_PRIVATE_KEY }}" ]; then
             echo "VPS_PRIVATE_KEY first 30 chars: $(echo "${{ secrets.VPS_PRIVATE_KEY }}" | head -c 30)"
             echo "VPS_PRIVATE_KEY length: $(echo -n "${{ secrets.VPS_PRIVATE_KEY }}" | wc -c)"
           else
             echo "VPS_PRIVATE_KEY is missing!"
           fi
-
           if [ -n "${{ secrets.GHCR_PAT }}" ]; then
             echo "GHCR_PAT first 10 chars: $(echo "${{ secrets.GHCR_PAT }}" | head -c 10)"
           else
             echo "GHCR_PAT is missing!"
           fi
           echo "===== END DEBUG ====="
-
       # -------------------------------
       # 3. Build Docker image
       # -------------------------------
@@ -55,7 +52,6 @@ jobs:
         run: |
           set -eux
           docker build -t ghcr.io/nguyenthanhtoan2103/finance-tracker:latest ./backend
-
       # -------------------------------
       # 4. Login to GitHub Container Registry
       # -------------------------------
@@ -63,7 +59,6 @@ jobs:
         run: |
           set -eux
           echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
       # -------------------------------
       # 5. Push Docker image
       # -------------------------------
@@ -71,7 +66,6 @@ jobs:
         run: |
           set -eux
           docker push ghcr.io/nguyenthanhtoan2103/finance-tracker:latest
-
       # -------------------------------
       # 6. Deploy to Ubuntu VPS via SSH key
       # -------------------------------
