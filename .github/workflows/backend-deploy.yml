@@ -18,22 +18,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
+      # -------------------------------
+      # 1. Checkout repository
+      # -------------------------------
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Check SSH secrets
+      # -------------------------------
+      # 2. Debug all secrets
+      # -------------------------------
+      - name: Debug all input values
         run: |
           set -eux
-          echo "VPS host is: ${{ secrets.VPS_HOST }}"
-          echo "VPS username is: ${{ secrets.VPS_USER }}"
+
+          echo "===== DEBUG INPUT VALUES ====="
+          
+          # VPS info
+          echo "VPS_HOST: ${{ secrets.VPS_HOST }}"
+          echo "VPS_USER: ${{ secrets.VPS_USER }}"
+          
+          # Private key: only first 30 chars + length
           if [ -n "${{ secrets.VPS_PRIVATE_KEY }}" ]; then
-            echo "Private key is set"
+            echo "VPS_PRIVATE_KEY first 30 chars: $(echo "${{ secrets.VPS_PRIVATE_KEY }}" | head -c 30)"
+            echo "VPS_PRIVATE_KEY length: $(echo -n "${{ secrets.VPS_PRIVATE_KEY }}" | wc -c)"
           else
-            echo "Private key is missing"
+            echo "VPS_PRIVATE_KEY is missing!"
           fi
 
+          # GHCR_PAT: only first 10 chars
+          if [ -n "${{ secrets.GHCR_PAT }}" ]; then
+            echo "GHCR_PAT first 10 chars: $(echo "${{ secrets.GHCR_PAT }}" | head -c 10)"
+          else
+            echo "GHCR_PAT is missing!"
+          fi
 
+          echo "===== END DEBUG ====="
+
+      # -------------------------------
+      # 3. Build Docker image
+      # -------------------------------
       - name: Build Docker image
         run: |
           set -eux
@@ -41,20 +64,29 @@ jobs:
           docker build -t ghcr.io/nguyenthanhtoan2103/finance-tracker:latest ./backend
           echo "Docker build finished."
 
+      # -------------------------------
+      # 4. Login to GitHub Container Registry
+      # -------------------------------
       - name: Login to GHCR
         run: |
           set -eux
-          echo "Logging in to GitHub Container Registry..."
+          echo "Logging in to GHCR..."
           echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           echo "Login successful."
 
+      # -------------------------------
+      # 5. Push Docker image
+      # -------------------------------
       - name: Push Docker image
         run: |
           set -eux
-          echo "Pushing Docker image to GHCR..."
+          echo "Pushing Docker image..."
           docker push ghcr.io/nguyenthanhtoan2103/finance-tracker:latest
           echo "Push finished."
 
+      # -------------------------------
+      # 6. Deploy to Windows VPS via SSH
+      # -------------------------------
       - name: Deploy to Windows VPS via SSH
         uses: garygrossgarten/github-action-ssh@release
         with:
