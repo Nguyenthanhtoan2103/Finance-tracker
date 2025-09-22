@@ -1,5 +1,7 @@
-const express = require('express');
 const dotenv = require('dotenv');
+dotenv.config({ path: __dirname + '/.env' }); // <-- phải load trước passport config
+
+const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
@@ -7,12 +9,15 @@ const { swaggerUi, specs } = require("./swagger");
 const rateLimit = require('express-rate-limit');
 const http = require('http');
 const { Server } = require('socket.io');
-const session = require("express-session");   // <-- thêm
-const passport = require("passport");         // <-- thêm
+const session = require("express-session");
+const passport = require("passport");
 
-require("./config/passport"); // <-- load config Google OAuth2
+// --- Debug env variables ---
+console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
+console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
 
-dotenv.config({ path: __dirname + '/.env' });
+// Passport config phải require sau khi dotenv đã load
+require("./config/passport");
 
 const app = express();
 const server = http.createServer(app);
@@ -51,7 +56,7 @@ app.use(cors());
 app.use(morgan('dev'));
 
 // routes
-app.use('/api/auth', require('./routes/auth'));   // <-- có cả Google OAuth2
+app.use('/api/auth', require('./routes/auth'));  
 app.use('/api/transactions', require('./routes/transaction'));
 app.use('/api/reports', require('./routes/report'));
 app.use('/api/budgets', require('./routes/budget'));
@@ -66,7 +71,6 @@ const io = new Server(server, {
 
 io.on("connection", (socket) => {
   console.log("⚡ A user connected:", socket.id);
-
   socket.on("disconnect", () => {
     console.log("❌ A user disconnected:", socket.id);
   });
