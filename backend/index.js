@@ -62,7 +62,7 @@ io.on("connection", (socket) => {
 // --- Gắn io vào app để controller có thể emit ---
 app.set("io", io);
 
-const PORT = process.env.PORT || 30107;
+const PORT = process.env.PORT || 80;
 server.listen(PORT, '0.0.0.0', () =>
   console.log(`🚀 Server running at http://localhost:${PORT}`)
 );
