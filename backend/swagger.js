@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:80",
+        url: "http://www.ftracker.site",
       },
     ],
     components: {

@@ -46,7 +46,7 @@ app.use('/api/budgets', require('./routes/budget'));
 // --- Socket.IO setup ---
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://www.ftracker.site/"],
+    origin: "*", 
     methods: ["GET", "POST"]
   }
 });
