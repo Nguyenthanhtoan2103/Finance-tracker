@@ -26,7 +26,7 @@ const server = http.createServer(app);
 connectDB();
 
 // --- Middleware ---
-app.use(cors()); // ✅ phải để đầu tiên để Swagger/API không bị CORS
+app.use(cors()); 
 app.use(express.json());
 app.use(morgan('dev'));
 
