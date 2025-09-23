@@ -6,7 +6,7 @@
 # This workflow integrates njsscan with GitHub's Code Scanning feature
 # nodejsscan is a static security code scanner that finds insecure code patterns in your Node.js applications
 
-name: CI/CD Backend to Ubuntu
+name: ci/cd backend to ubuntu
 
 on:
   push:
@@ -18,50 +18,57 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code
-      - name: Checkout repository
+      # 1. checkout repository
+      - name: checkout repository
         uses: actions/checkout@v3
 
-      # 2. Set up Docker Buildx
-      - name: Set up Docker Buildx
+      # 2. set up docker buildx
+      - name: set up docker buildx
         uses: docker/setup-buildx-action@v2
 
-      # 3. Login GHCR
-      - name: Log in to GHCR
+      # 3. login ghcr
+      - name: log in to ghcr
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.ghcr_pat }}
 
-      # 4. Build Docker image
-      - name: Build Docker image
+      # 4. build docker image
+      - name: build docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/finance-tracker-backend:latest ./backend
+          repo_name=$(echo ${{ github.repository }} | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
+          full_image="ghcr.io/${{ github.repository_owner }}/$repo_name-backend:latest"
+          echo "docker image: $full_image"
+          docker build -t $full_image ./backend
 
-      # 5. Push Docker image
-      - name: Push Docker image
+      # 5. push docker image
+      - name: push docker image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/finance-tracker-backend:latest
+          docker push $full_image
 
-      # 6. Deploy to VPS via SSH
-      - name: Deploy to VPS
+      # 6. deploy to vps via ssh
+      - name: deploy to vps
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          host: ${{ secrets.vps_host }}
+          username: ${{ secrets.vps_user }}
+          key: ${{ secrets.vps_private_key }}
           port: 22
           script: |
-            FULL_IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER}/finance-tracker-backend:latest"
-            echo "Deploy Docker image: $FULL_IMAGE"
+            full_image="ghcr.io/${GITHUB_REPOSITORY_OWNER}/$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')-backend:latest"
+            echo "deploy docker image: $full_image"
 
-            # Pull image mới nhất
-            docker pull $FULL_IMAGE
+            # login ghcr trên server
+            echo "${{ secrets.ghcr_pat }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Stop container cũ nếu có
+            # pull image mới nhất
+            docker pull $full_image
+
+            # stop container cũ nếu có
             docker stop backend || true
             docker rm backend || true
 
-            # Run container mới (backend chạy port 5000)
-            docker run -d --name backend -p 5000:5000 $FULL_IMAGE
+            # run container mới (backend port 5000)
+            docker run -d --name backend -p 5000:5000 $full_image
+
