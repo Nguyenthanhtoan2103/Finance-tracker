@@ -10,9 +10,7 @@ const options = {
       description: "API documentation for Finance Tracker",
     },
     servers: [
-      {
-        url: "http://www.ftracker.site:5000",
-      },
+      { url: 'http://www.ftracker.site:5000' }
     ],
     components: {
       securitySchemes: {
