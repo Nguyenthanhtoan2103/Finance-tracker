@@ -14,35 +14,35 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  backend-deploy:
     runs-on: ubuntu-latest
-
     steps:
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Build Docker image
+      # 2. Build Docker image
       - name: Build Docker image
         run: |
           repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-          full_image="ghcr.io/$(echo ${GITHUB_REPOSITORY_OWNER} | tr '[:upper:]' '[:lower:]')/$repo_name-backend:latest"
+          full_image="ghcr.io/Nguyenthanhtoan2103/$repo_name-backend:latest"
           echo "Docker image: $full_image"
           docker build -t $full_image ./backend
 
-      # Login to GHCR
+      # 3. Login to GitHub Container Registry
       - name: Login to GHCR
         run: |
           echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Nguyenthanhtoan2103 --password-stdin
 
-      # Push Docker image
+      # 4. Push Docker image
       - name: Push Docker image
         run: |
           repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-          full_image="ghcr.io/$(echo ${GITHUB_REPOSITORY_OWNER} | tr '[:upper:]' '[:lower:]')/$repo_name-backend:latest"
+          full_image="ghcr.io/Nguyenthanhtoan2103/$repo_name-backend:latest"
           docker push $full_image
 
-      # Deploy to VPS
-      - name: Deploy to Ubuntu VPS
+      # 5. Deploy to VPS via SSH
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -51,7 +51,7 @@ jobs:
           port: 22
           script: |
             repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-            full_image="ghcr.io/$(echo ${GITHUB_REPOSITORY_OWNER} | tr '[:upper:]' '[:lower:]')/$repo_name-backend:latest"
+            full_image="ghcr.io/Nguyenthanhtoan2103/$repo_name-backend:latest"
             echo "Deploy Docker image: $full_image"
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Nguyenthanhtoan2103 --password-stdin
             docker pull $full_image
