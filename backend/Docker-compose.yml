@@ -1,26 +1,33 @@
+version: '3.9'
+
 services:
-  app:
-    build: .
-    image: ghcr.io/nguyenthanhtoan2103/finance-tracker:latest
+  backend:
+    build: ./backend
+    image: ghcr.io/nguyenthanhtoan2103/finance-tracker-backend:latest
     ports:
       - "5000:5000"
     env_file:
-      - .env
+      - ./backend/.env
     depends_on:
       - mongo
       - redis
+    restart: unless-stopped
 
   mongo:
     image: mongo:7
+    container_name: mongo
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    restart: unless-stopped
 
   redis:
     image: redis:7
+    container_name: redis
     ports:
       - "6379:6379"
+    restart: unless-stopped
 
 volumes:
   mongo_data:
