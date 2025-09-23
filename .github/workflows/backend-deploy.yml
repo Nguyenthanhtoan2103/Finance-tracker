@@ -18,32 +18,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # -------------------------------
       # 1. Checkout repository
+      # -------------------------------
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Build Docker image
-      - name: Build Docker image
-        run: |
-          repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-          full_image="ghcr.io/nguyenthanhtoan2103/$repo_name-backend:latest"
-          echo "Building Docker image: $full_image"
-          docker build -t $full_image ./backend
-
-      # 3. Login GHCR
+      # -------------------------------
+      # 2. Set up Docker login for GHCR
+      # -------------------------------
       - name: Login to GitHub Container Registry
         run: |
           echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Nguyenthanhtoan2103 --password-stdin
 
-      # 4. Push Docker image
+      # -------------------------------
+      # 3. Build Docker image
+      # -------------------------------
+      - name: Build Docker image
+        run: |
+          repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
+          full_image="ghcr.io/nguyenthanhtoan2103/$repo_name-backend:latest"
+          echo "Docker image: $full_image"
+          docker build -t $full_image ./backend
+
+      # -------------------------------
+      # 4. Push Docker image to GHCR
+      # -------------------------------
       - name: Push Docker image
         run: |
           repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
           full_image="ghcr.io/nguyenthanhtoan2103/$repo_name-backend:latest"
-          echo "Pushing Docker image: $full_image"
           docker push $full_image
 
+      # -------------------------------
       # 5. Deploy to Ubuntu VPS via SSH
+      # -------------------------------
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -52,8 +61,8 @@ jobs:
           key: ${{ secrets.VPS_PRIVATE_KEY }}
           port: 22
           script: |
-            repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-            full_image="ghcr.io/nguyenthanhtoan2103/$repo_name-backend:latest"
+            # Truyền trực tiếp tên Docker image (hardcode repo_name đã lowercase)
+            full_image="ghcr.io/nguyenthanhtoan2103/finance-tracker-backend:latest"
             echo "Deploying Docker image: $full_image"
 
             # Login GHCR trên server
@@ -68,3 +77,4 @@ jobs:
 
             # Run container mới
             docker run -d --name backend -p 5000:5000 $full_image
+
