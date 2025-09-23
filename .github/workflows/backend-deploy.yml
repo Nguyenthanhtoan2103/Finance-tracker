@@ -14,34 +14,43 @@ on:
       - main
 
 jobs:
-  backend-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # 1. Checkout repository
+      # 1. Checkout code
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Build Docker image
+      # 2. Debug input secrets (optional)
+      - name: Debug input secrets
+        run: |
+          echo "===== DEBUG INPUTS ====="
+          echo "VPS_HOST: ${{ secrets.VPS_HOST }}"
+          echo "VPS_USER: ${{ secrets.VPS_USER }}"
+          echo "VPS_PRIVATE_KEY length: $(echo -n "${{ secrets.VPS_PRIVATE_KEY }}" | wc -c)"
+          echo "GHCR_PAT first 10 chars: $(echo "${{ secrets.GHCR_PAT }}" | head -c 10)"
+          echo "===== END DEBUG ====="
+
+      # 3. Build Docker image
       - name: Build Docker image
         run: |
           repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-          full_image="ghcr.io/Nguyenthanhtoan2103/$repo_name-backend:latest"
+          full_image="ghcr.io/nguyenthanhtoan2103/$repo_name-backend:latest"
           echo "Docker image: $full_image"
           docker build -t $full_image ./backend
 
-      # 3. Login to GitHub Container Registry
+      # 4. Login to GitHub Container Registry
       - name: Login to GHCR
         run: |
           echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Nguyenthanhtoan2103 --password-stdin
 
-      # 4. Push Docker image
+      # 5. Push Docker image
       - name: Push Docker image
         run: |
-          repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-          full_image="ghcr.io/Nguyenthanhtoan2103/$repo_name-backend:latest"
           docker push $full_image
 
-      # 5. Deploy to VPS via SSH
+      # 6. Deploy to Ubuntu VPS via SSH
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -50,11 +59,16 @@ jobs:
           key: ${{ secrets.VPS_PRIVATE_KEY }}
           port: 22
           script: |
-            repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-            full_image="ghcr.io/Nguyenthanhtoan2103/$repo_name-backend:latest"
-            echo "Deploy Docker image: $full_image"
+            echo "Deploying backend Docker image on VPS..."
+            FULL_IMAGE=$full_image
+            echo "Login GHCR on VPS"
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Nguyenthanhtoan2103 --password-stdin
-            docker pull $full_image
+            echo "Pull latest image"
+            docker pull $FULL_IMAGE
+            echo "Stop old container if exists"
             docker stop backend || true
             docker rm backend || true
-            docker run -d --name backend -p 5000:5000 $full_image
+            echo "Run backend container on port 5000"
+            docker run -d --name backend -p 5000:5000 $FULL_IMAGE
+            echo "Deployment completed!"
+
