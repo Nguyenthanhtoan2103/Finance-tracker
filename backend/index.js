@@ -1,5 +1,5 @@
 const dotenv = require('dotenv');
-dotenv.config({ path: __dirname + '/.env' }); // <-- phải load trước passport config
+dotenv.config({ path: __dirname + '/.env' }); // load biến môi trường trước passport
 
 const express = require('express');
 const cors = require('cors');
@@ -12,21 +12,23 @@ const { Server } = require('socket.io');
 const session = require("express-session");
 const passport = require("passport");
 
-// --- Debug env variables ---
+// Debug env
 console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
 console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
 
-// Passport config phải require sau khi dotenv đã load
+// Passport config
 require("./config/passport");
 
 const app = express();
 const server = http.createServer(app);
 
-// connect DB
+// Connect DB
 connectDB();
 
-// middleware
+// --- Middleware ---
+app.use(cors()); // ✅ phải để đầu tiên để Swagger/API không bị CORS
 app.use(express.json());
+app.use(morgan('dev'));
 
 // Session (cho Passport OAuth2)
 app.use(session({
@@ -37,7 +39,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Rate Limiter: giới hạn 60 request / 1 phút / IP
+// Rate limiter
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 60,
@@ -45,21 +47,14 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Swagger Docs
+// --- Swagger Docs ---
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.get("/api-docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(specs);
 });
 
-app.use(cors({
-  origin: 'http://www.ftracker.site', 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
-app.use(morgan('dev'));
-
-// routes
+// --- Routes ---
 app.use('/api/auth', require('./routes/auth'));  
 app.use('/api/transactions', require('./routes/transaction'));
 app.use('/api/reports', require('./routes/report'));
@@ -80,10 +75,11 @@ io.on("connection", (socket) => {
   });
 });
 
-// --- Gắn io vào app để controller có thể emit ---
+// Gắn io vào app
 app.set("io", io);
 
-const PORT = process.env.PORT || 80;
+// --- Start server ---
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () =>
-  console.log(`🚀 Server running at http://0.0.0.0:${PORT}`)
+  console.log(`🚀 Server running at http://www.ftracker.site:${PORT}`)
 );
