@@ -52,10 +52,7 @@ app.get("/api-docs.json", (req, res) => {
   res.send(specs);
 });
 
-app.use(cors({
-  origin: ["http://localhost:5000", "http://www.ftracker.site"],
-  credentials: true,
-}));
+app.use(cors());
 app.use(morgan('dev'));
 
 // routes
