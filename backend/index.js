@@ -53,9 +53,9 @@ app.get("/api-docs.json", (req, res) => {
 });
 
 app.use(cors({
-  origin: 'http://www.ftracker.site:5000', // frontend domain
+  origin: 'http://www.ftracker.site:5000', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true // nếu dùng cookie / session
+  credentials: true
 }));
 app.use(morgan('dev'));
 
