@@ -28,19 +28,14 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log("Login attempt:", email);
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email và password bắt buộc" });
+    }
 
     const user = await User.findOne({ email });
-    console.log("User found:", user);
-
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    console.log("Request password:", password);
-    console.log("Stored password:", user.password);
-
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password match:", isMatch);
-
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
@@ -49,7 +44,7 @@ const login = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: err.message });
   }
-};
+}
 
 // Google OAuth2 callback
 const googleCallback = (req, res) => {
