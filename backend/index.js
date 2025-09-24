@@ -27,7 +27,7 @@ connectDB();
 
 // --- Middleware ---
 app.use(cors({
-  origin: "https://www.ftracker.site", // frontend origin
+  origin: "http://www.ftracker.site", // frontend origin
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true // nếu cần gửi cookie/token
 }));
