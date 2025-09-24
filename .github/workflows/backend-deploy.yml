@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
+      # 1. Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -27,21 +27,20 @@ jobs:
         run: |
           echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u nguyenthanhtoan2103 --password-stdin
 
-      # 3. Build Docker image
-      - name: Build Docker image
+      # 3. Build Docker image backend
+      - name: Build backend Docker image
         run: |
           full_image="ghcr.io/nguyenthanhtoan2103/finance-tracker-backend:latest"
-          echo "Docker image: $full_image"
           docker build -t $full_image ./backend
 
-      # 4. Push Docker image
-      - name: Push Docker image
+      # 4. Push backend Docker image
+      - name: Push backend Docker image
         run: |
           full_image="ghcr.io/nguyenthanhtoan2103/finance-tracker-backend:latest"
           docker push $full_image
 
       # 5. Deploy to VPS
-      - name: Deploy to VPS
+      - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -49,16 +48,10 @@ jobs:
           key: ${{ secrets.VPS_PRIVATE_KEY }}
           port: 22
           script: |
-            full_image="ghcr.io/nguyenthanhtoan2103/finance-tracker-backend:latest"
-            echo "Deploying Docker image: $full_image"
-
+            cd /home/Finance-tracker/backend
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u nguyenthanhtoan2103 --password-stdin
-
-            docker pull $full_image
-
-            docker stop backend || true
-            docker rm backend || true
-
-            docker run -d --name backend -p 5000:5000 --restart unless-stopped $full_image
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d --build
 
 
