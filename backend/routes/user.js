@@ -7,14 +7,14 @@ const router = express.Router();
  * @swagger
  * /api/users:
  *   get:
- *     summary: Lấy danh sách tất cả user
+ *     summary: get all user
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: Danh sách user trả về
+ *         description: list of user
  *       500:
- *         description: Lỗi server
+ *         description: server error
  */
-router.get("/", getAllUsers);
+router.get('/', getAllUsers);
 
 module.exports = router;
