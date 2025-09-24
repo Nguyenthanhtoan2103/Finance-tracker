@@ -50,13 +50,13 @@ const login = async (req, res) => {
 const googleCallback = (req, res) => {
   try {
     if (!req.user) {
-      return res.redirect(`${process.env.CLIENT_URL}/login?error=GoogleAuthFailed`);
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=GoogleAuthFailed`);
     }
 
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-    res.redirect(`${process.env.CLIENT_URL}/login?token=${token}&username=${req.user.username}`);
+    res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}&username=${req.user.username}`);
   } catch (err) {
-    res.redirect(`${process.env.CLIENT_URL}/login?error=ServerError`);
+    res.redirect(`${process.env.FRONTEND_URL}/login?error=ServerError`);
   }
 };
 
