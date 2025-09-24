@@ -41,7 +41,7 @@ jobs:
           echo "Pushing Docker image: $full_image"
           docker push $full_image
 
-      # 5. Deploy to VPS
+           # 5. Deploy to VPS
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -51,10 +51,18 @@ jobs:
           port: 22
           script: |
             cd /home/Finance-tracker/backend
+
+            # 1. Pull latest code từ GitHub
+            git reset --hard
+            git pull origin main
+
+            # 2. Docker login GHCR
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u nguyenthanhtoan2103 --password-stdin
 
-            # Sử dụng docker compose mới (space, không phải dash)
+            # 3. Pull image mới
             docker compose pull
+
+            # 4. Restart container
             docker compose down
             docker compose up -d --build
 
