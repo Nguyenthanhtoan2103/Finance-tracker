@@ -42,7 +42,7 @@ const router = express.Router();
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: Invalid input
+ *         description: Invalid input or user already exists
  */
 router.post("/register", register);
 
@@ -72,7 +72,7 @@ router.post("/register", register);
  *     responses:
  *       200:
  *         description: User logged in successfully (returns JWT token)
- *       401:
+ *       400:
  *         description: Invalid credentials
  */
 router.post("/login", login);
