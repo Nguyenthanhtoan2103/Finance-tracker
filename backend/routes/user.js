@@ -7,13 +7,13 @@ const router = express.Router();
  * @swagger
  * /api/users:
  *   get:
- *     summary: get all user
+ *     summary: Get all user exist
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: list of user
+ *         description: List of user
  *       500:
- *         description: server error
+ *         description: Server error
  */
 router.get('/', getAllUsers);
 
