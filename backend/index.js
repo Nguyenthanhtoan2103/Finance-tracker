@@ -29,7 +29,7 @@ connectDB();
 app.use(cors({
   origin: "http://www.ftracker.site", // frontend origin
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true // nếu cần gửi cookie/token
+  credentials: true
 }));
 app.use(express.json());
 app.use(morgan('dev'));
@@ -68,20 +68,31 @@ app.use('/api/budgets', require('./routes/budget'));
 // --- Socket.IO setup ---
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://www.ftracker.site", // chỉ cho frontend domain
     methods: ["GET", "POST"]
   }
 });
 
 io.on("connection", (socket) => {
   console.log("⚡ A user connected:", socket.id);
+
+  // lấy userId từ query string
+  const { userId } = socket.handshake.query;
+  if (userId) {
+    socket.join(userId);
+    console.log(`📌 User ${userId} joined room`);
+  }
+
   socket.on("disconnect", () => {
     console.log("❌ A user disconnected:", socket.id);
   });
 });
 
-// Gắn io vào app
-app.set("io", io);
+// --- Gắn io vào req ---
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // --- Start server ---
 const PORT = process.env.PORT || 5000;
