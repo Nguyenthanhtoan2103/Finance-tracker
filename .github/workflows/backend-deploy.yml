@@ -29,7 +29,7 @@ jobs:
       # -------------------------------
       - name: Login to GitHub Container Registry
         run: |
-          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Nguyenthanhtoan2103 --password-stdin
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u nguyenthanhtoan2103 --password-stdin
 
       # -------------------------------
       # 3. Build Docker image
@@ -37,7 +37,7 @@ jobs:
       - name: Build Docker image
         run: |
           repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-          full_image="ghcr.io/nguyenthanhtoan2103/$repo_name-backend:latest"
+          full_image="ghcr.io/nguyenthanhtoan2103/${repo_name}-backend:latest"
           echo "Docker image: $full_image"
           docker build -t $full_image ./backend
 
@@ -47,7 +47,7 @@ jobs:
       - name: Push Docker image
         run: |
           repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-          full_image="ghcr.io/nguyenthanhtoan2103/$repo_name-backend:latest"
+          full_image="ghcr.io/nguyenthanhtoan2103/${repo_name}-backend:latest"
           docker push $full_image
 
       # -------------------------------
@@ -61,12 +61,13 @@ jobs:
           key: ${{ secrets.VPS_PRIVATE_KEY }}
           port: 22
           script: |
-            # Truyền trực tiếp tên Docker image (hardcode repo_name đã lowercase)
-            full_image="ghcr.io/nguyenthanhtoan2103/finance-tracker-backend:latest"
+            repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
+            full_image="ghcr.io/nguyenthanhtoan2103/${repo_name}-backend:latest"
+
             echo "Deploying Docker image: $full_image"
 
             # Login GHCR trên server
-            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Nguyenthanhtoan2103 --password-stdin
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u nguyenthanhtoan2103 --password-stdin
 
             # Pull image mới nhất
             docker pull $full_image
@@ -75,6 +76,6 @@ jobs:
             docker stop backend || true
             docker rm backend || true
 
-            # Run container mới
-            docker run -d --name backend -p 5000:5000 $full_image
+            # Run container mới với restart policy
+            docker run -d --name backend -p 5000:5000 --restart unless-stopped $full_image
 
