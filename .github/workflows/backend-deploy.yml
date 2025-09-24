@@ -14,45 +14,34 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  build-and-deploy-backend:
     runs-on: ubuntu-latest
 
     steps:
-      # -------------------------------
       # 1. Checkout repository
-      # -------------------------------
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # -------------------------------
-      # 2. Set up Docker login for GHCR
-      # -------------------------------
+      # 2. Docker login GHCR
       - name: Login to GitHub Container Registry
         run: |
-          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Nguyenthanhtoan2103 --password-stdin
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u nguyenthanhtoan2103 --password-stdin
 
-      # -------------------------------
       # 3. Build Docker image
-      # -------------------------------
       - name: Build Docker image
         run: |
-          repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-          full_image="ghcr.io/nguyenthanhtoan2103/$repo_name-backend:latest"
-          echo "Docker image: $full_image"
+          full_image="ghcr.io/nguyenthanhtoan2103/finance-tracker-backend:latest"
+          echo "Building Docker image: $full_image"
           docker build -t $full_image ./backend
 
-      # -------------------------------
-      # 4. Push Docker image to GHCR
-      # -------------------------------
+      # 4. Push Docker image
       - name: Push Docker image
         run: |
-          repo_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
-          full_image="ghcr.io/nguyenthanhtoan2103/$repo_name-backend:latest"
+          full_image="ghcr.io/nguyenthanhtoan2103/finance-tracker-backend:latest"
+          echo "Pushing Docker image: $full_image"
           docker push $full_image
 
-      # -------------------------------
-      # 5. Deploy to Ubuntu VPS via SSH
-      # -------------------------------
+      # 5. Deploy to VPS
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -61,20 +50,11 @@ jobs:
           key: ${{ secrets.VPS_PRIVATE_KEY }}
           port: 22
           script: |
-            # Truyền trực tiếp tên Docker image (hardcode repo_name đã lowercase)
-            full_image="ghcr.io/nguyenthanhtoan2103/finance-tracker-backend:latest"
-            echo "Deploying Docker image: $full_image"
+            cd /home/Finance-tracker/backend
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u nguyenthanhtoan2103 --password-stdin
 
-            # Login GHCR trên server
-            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Nguyenthanhtoan2103 --password-stdin
-
-            # Pull image mới nhất
-            docker pull $full_image
-
-            # Stop container cũ nếu có
-            docker stop backend || true
-            docker rm backend || true
-
-            # Run container mới
-            docker run -d --name backend -p 5000:5000 $full_image
+            # Sử dụng docker compose mới (space, không phải dash)
+            docker compose pull
+            docker compose down
+            docker compose up -d --build
 
