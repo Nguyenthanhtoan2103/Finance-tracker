@@ -50,7 +50,11 @@ const limiter = rateLimit({
   message: { status: 429, message: "Too many requests, please try again later." },
 });
 app.use(limiter);
-
+// --- io ---
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 // --- Swagger Docs ---
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.get("/api-docs.json", (req, res) => {
@@ -89,11 +93,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// --- Gắn io vào req ---
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
 
 // --- Start server ---
 const PORT = process.env.PORT || 5000;
