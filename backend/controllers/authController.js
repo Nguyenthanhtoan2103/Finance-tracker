@@ -62,10 +62,13 @@ const login = async (req, res) => {
 const googleCallback = (req, res) => {
   try {
     if (!req.user) {
-      return res.redirect(`${process.env.FRONTEND_URL}/login?error=GoogleAuthFailed`);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?error=GoogleAuthFailed`
+      );
     }
 
-    console.log("🔹 Google user:", req.user); // check có _id chưa
+    // log để chắc chắn user có _id
+    console.log("🔹 Google User:", req.user);
 
     const token = jwt.sign(
       { id: req.user._id },
@@ -74,7 +77,9 @@ const googleCallback = (req, res) => {
     );
 
     res.redirect(
-      `${process.env.FRONTEND_URL}/login?token=${token}&username=${req.user.username}&userId=${req.user._id}`
+      `${process.env.FRONTEND_URL}/login?token=${token}&username=${encodeURIComponent(
+        req.user.username
+      )}&userId=${req.user._id}`
     );
   } catch (err) {
     console.error("Google Callback Error:", err);

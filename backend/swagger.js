@@ -27,7 +27,7 @@ const options = {
       },
     ],
   },
-  apis: ["./routes/*.js"], // swagger sẽ đọc file route
+  apis: ["./routes/*.js"], 
 };
 
 const specs = swaggerJsdoc(options);
