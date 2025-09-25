@@ -69,7 +69,8 @@ app.use('/api/budgets', require('./routes/budget'));
 const io = new Server(server, {
   cors: {
     origin: "http://www.ftracker.site", // chỉ cho frontend domain
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   }
 });
 
