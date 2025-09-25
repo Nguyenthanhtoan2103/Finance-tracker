@@ -132,23 +132,22 @@ const invalidateTransactionCache = async (userId) => {
 // --- Create transaction ---
 const createTransaction = async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
     const transaction = new Transaction({ ...req.body, user: req.user });
     await transaction.save();
 
-    // Xóa cache
-    await invalidateTransactionCache(req.user);
-
-    // 🔔 Emit real-time chỉ cho user đó
-    req.io.to(req.user.toString()).emit("transaction:update", {
+    req.io.to(req.user).emit("transaction:update", {
       action: "created",
       data: transaction,
     });
 
-    res.json(transaction);
+    res.status(201).json(transaction);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // --- Get transactions ---
 const getTransactions = async (req, res) => {
