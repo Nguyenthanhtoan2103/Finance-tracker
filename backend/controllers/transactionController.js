@@ -139,7 +139,7 @@ const createTransaction = async (req, res) => {
     await invalidateTransactionCache(req.user);
 
     // 🔔 Emit real-time chỉ cho user đó
-    req.io.to(req.user).emit("transaction:update", {
+    req.io.to(req.user.toString()).emit("transaction:update", {
       action: "created",
       data: transaction,
     });
