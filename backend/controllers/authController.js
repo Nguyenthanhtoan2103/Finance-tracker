@@ -47,17 +47,40 @@ const login = async (req, res) => {
 }
 
 // Google OAuth2 callback
+// const googleCallback = (req, res) => {
+//   try {
+//     if (!req.user) {
+//       return res.redirect(`${process.env.FRONTEND_URL}/login?error=GoogleAuthFailed`);
+//     }
+
+//     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+//     res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}&username=${req.user.username}`);
+//   } catch (err) {
+//     res.redirect(`${process.env.FRONTEND_URL}/login?error=ServerError`);
+//   }
+// };
 const googleCallback = (req, res) => {
   try {
     if (!req.user) {
-      return res.redirect(`${process.env.FRONTEND_URL}/login?error=GoogleAuthFailed`);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?error=GoogleAuthFailed`
+      );
     }
 
-    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-    res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}&username=${req.user.username}`);
+    const token = jwt.sign(
+      { id: req.user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+ 
+    res.redirect(
+      `${process.env.FRONTEND_URL}/login?token=${token}&username=${req.user.username}&userId=${req.user._id}`
+    );
   } catch (err) {
     res.redirect(`${process.env.FRONTEND_URL}/login?error=ServerError`);
   }
 };
+
 
 module.exports = { register, login, googleCallback };
