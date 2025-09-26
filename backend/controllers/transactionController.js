@@ -277,20 +277,55 @@ const createTransaction = async (req, res) => {
 };
 
 // --- Get transactions ---
+// const getTransactions = async (req, res) => {
+//   const cacheKey = `transactions:${req.user}`;
+//   try {
+//     const cached = await redisClient.get(cacheKey);
+//     if (cached) return res.json(JSON.parse(cached));
+
+//     const transactions = await Transaction.find({ user: req.user }).sort({ date: -1 });
+//     await redisClient.setEx(cacheKey, 60, JSON.stringify(transactions));
+//     res.json(transactions);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 const getTransactions = async (req, res) => {
-  const cacheKey = `transactions:${req.user}`;
   try {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    const page = parseInt(req.query.page) || 1; // page hiện tại
+    const limit = parseInt(req.query.limit) || 10; // số bản ghi mỗi trang
+    const skip = (page - 1) * limit;
+
+    const cacheKey = `transactions:${req.user}:page:${page}:limit:${limit}`;
+
     const cached = await redisClient.get(cacheKey);
     if (cached) return res.json(JSON.parse(cached));
 
-    const transactions = await Transaction.find({ user: req.user }).sort({ date: -1 });
-    await redisClient.setEx(cacheKey, 60, JSON.stringify(transactions));
-    res.json(transactions);
+    // Lấy dữ liệu từ DB với paging + sort theo date desc
+    const transactions = await Transaction.find({ user: req.user })
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalCount = await Transaction.countDocuments({ user: req.user });
+    const totalPages = Math.ceil(totalCount / limit);
+
+    const result = {
+      transactions,
+      totalPages,
+      currentPage: page,
+      totalCount,
+    };
+
+    await redisClient.setEx(cacheKey, 60, JSON.stringify(result)); // cache 60s
+
+    res.json(result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 // --- Get Top 5 transactions ---
 const getTop5Transactions = async (req, res) => {
   const cacheKey = `top5:${req.user}`;
