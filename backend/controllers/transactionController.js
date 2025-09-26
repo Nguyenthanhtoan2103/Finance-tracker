@@ -277,111 +277,34 @@ const createTransaction = async (req, res) => {
 };
 
 // --- Get transactions ---
-// const getTransactions = async (req, res) => {
-//   const cacheKey = `transactions:${req.user}`;
-//   try {
-//     const cached = await redisClient.get(cacheKey);
-//     if (cached) return res.json(JSON.parse(cached));
-
-//     const transactions = await Transaction.find({ user: req.user }).sort({ date: -1 });
-//     await redisClient.setEx(cacheKey, 60, JSON.stringify(transactions));
-//     res.json(transactions);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
-// const getTransactions = async (req, res) => {
-//   const userId = req.user;
-//   const page = parseInt(req.query.page) || 1;
-//   const limit = parseInt(req.query.limit) || 10;
-//   const search = req.query.search || "";
-
-//   try {
-//     const query = {
-//       user: userId,
-//       $or: [
-//         { description: { $regex: search, $options: "i" } },
-//         { category: { $regex: search, $options: "i" } },
-//         { paymentMethod: { $regex: search, $options: "i" } },
-//       ],
-//     };
-
-//     const total = await Transaction.countDocuments(query);
-//     const transactions = await Transaction.find(query)
-//       .sort({ date: -1 })
-//       .skip((page - 1) * limit)
-//       .limit(limit);
-
-//     res.json({
-//       transactions,
-//       totalPages: Math.ceil(total / limit),
-//       currentPage: page,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 const getTransactions = async (req, res) => {
+  const cacheKey = `transactions:${req.user}`;
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
 
-    const query = { user: req.user };
-
-    const total = await Transaction.countDocuments(query);
-    const transactions = await Transaction.find(query)
-      .sort({ date: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    await redisClient.setEx(`transactions:${req.user}`, 60, JSON.stringify(transactions));
-
-    res.json({
-      transactions,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      totalTransactions: total,
-    });
+    const transactions = await Transaction.find({ user: req.user }).sort({ date: -1 });
+    await redisClient.setEx(cacheKey, 60, JSON.stringify(transactions));
+    res.json(transactions);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
 // --- Get Top 5 transactions ---
-// const getTop5Transactions = async (req, res) => {
-//   const cacheKey = `top5:${req.user}`;
-//   try {
-//     const cached = await redisClient.get(cacheKey);
-//     if (cached) return res.json(JSON.parse(cached));
-
-//     const top5 = await Transaction.find({ user: req.user })
-//       .sort({ amount: -1 })
-//       .limit(5);
-
-//     await redisClient.setEx(cacheKey, 60, JSON.stringify(top5));
-//     res.json(top5);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 const getTop5Transactions = async (req, res) => {
+  const cacheKey = `top5:${req.user}`;
   try {
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-    const cacheKey = `top5:${req.user}`;
     const cached = await redisClient.get(cacheKey);
     if (cached) return res.json(JSON.parse(cached));
 
-    // Lấy top 5 theo amount giảm dần
     const top5 = await Transaction.find({ user: req.user })
-      .sort({ amount: -1 }) // amount giảm dần
+      .sort({ amount: -1 })
       .limit(5);
 
-    await redisClient.setEx(cacheKey, 60, JSON.stringify(top5)); // cache 60s
+    await redisClient.setEx(cacheKey, 60, JSON.stringify(top5));
     res.json(top5);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
