@@ -290,37 +290,64 @@ const createTransaction = async (req, res) => {
 //     res.status(500).json({ message: err.message });
 //   }
 // };
-const getTransactions = async (req, res) => {
-  const userId = req.user;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const search = req.query.search || "";
+// const getTransactions = async (req, res) => {
+//   const userId = req.user;
+//   const page = parseInt(req.query.page) || 1;
+//   const limit = parseInt(req.query.limit) || 10;
+//   const search = req.query.search || "";
 
+//   try {
+//     const query = {
+//       user: userId,
+//       $or: [
+//         { description: { $regex: search, $options: "i" } },
+//         { category: { $regex: search, $options: "i" } },
+//         { paymentMethod: { $regex: search, $options: "i" } },
+//       ],
+//     };
+
+//     const total = await Transaction.countDocuments(query);
+//     const transactions = await Transaction.find(query)
+//       .sort({ date: -1 })
+//       .skip((page - 1) * limit)
+//       .limit(limit);
+
+//     res.json({
+//       transactions,
+//       totalPages: Math.ceil(total / limit),
+//       currentPage: page,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+const getTransactions = async (req, res) => {
   try {
-    const query = {
-      user: userId,
-      $or: [
-        { description: { $regex: search, $options: "i" } },
-        { category: { $regex: search, $options: "i" } },
-        { paymentMethod: { $regex: search, $options: "i" } },
-      ],
-    };
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const query = { user: req.user };
 
     const total = await Transaction.countDocuments(query);
     const transactions = await Transaction.find(query)
       .sort({ date: -1 })
-      .skip((page - 1) * limit)
+      .skip(skip)
       .limit(limit);
+
+    await redisClient.setEx(`transactions:${req.user}`, 60, JSON.stringify(transactions));
 
     res.json({
       transactions,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
+      totalTransactions: total,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 // --- Get Top 5 transactions ---
 // const getTop5Transactions = async (req, res) => {
 //   const cacheKey = `top5:${req.user}`;
