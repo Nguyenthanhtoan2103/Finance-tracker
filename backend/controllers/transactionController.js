@@ -291,37 +291,32 @@ const createTransaction = async (req, res) => {
 //   }
 // };
 const getTransactions = async (req, res) => {
+  const userId = req.user;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const search = req.query.search || "";
+
   try {
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-    const page = parseInt(req.query.page) || 1; // page hiện tại
-    const limit = parseInt(req.query.limit) || 10; // số bản ghi mỗi trang
-    const skip = (page - 1) * limit;
-
-    const cacheKey = `transactions:${req.user}:page:${page}:limit:${limit}`;
-
-    const cached = await redisClient.get(cacheKey);
-    if (cached) return res.json(JSON.parse(cached));
-
-    // Lấy dữ liệu từ DB với paging + sort theo date desc
-    const transactions = await Transaction.find({ user: req.user })
-      .sort({ date: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalCount = await Transaction.countDocuments({ user: req.user });
-    const totalPages = Math.ceil(totalCount / limit);
-
-    const result = {
-      transactions,
-      totalPages,
-      currentPage: page,
-      totalCount,
+    const query = {
+      user: userId,
+      $or: [
+        { description: { $regex: search, $options: "i" } },
+        { category: { $regex: search, $options: "i" } },
+        { paymentMethod: { $regex: search, $options: "i" } },
+      ],
     };
 
-    await redisClient.setEx(cacheKey, 60, JSON.stringify(result)); // cache 60s
+    const total = await Transaction.countDocuments(query);
+    const transactions = await Transaction.find(query)
+      .sort({ date: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    res.json(result);
+    res.json({
+      transactions,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
