@@ -327,19 +327,39 @@ const getTransactions = async (req, res) => {
   }
 };
 // --- Get Top 5 transactions ---
+// const getTop5Transactions = async (req, res) => {
+//   const cacheKey = `top5:${req.user}`;
+//   try {
+//     const cached = await redisClient.get(cacheKey);
+//     if (cached) return res.json(JSON.parse(cached));
+
+//     const top5 = await Transaction.find({ user: req.user })
+//       .sort({ amount: -1 })
+//       .limit(5);
+
+//     await redisClient.setEx(cacheKey, 60, JSON.stringify(top5));
+//     res.json(top5);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 const getTop5Transactions = async (req, res) => {
-  const cacheKey = `top5:${req.user}`;
   try {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    const cacheKey = `top5:${req.user}`;
     const cached = await redisClient.get(cacheKey);
     if (cached) return res.json(JSON.parse(cached));
 
+    // Lấy top 5 theo amount giảm dần
     const top5 = await Transaction.find({ user: req.user })
-      .sort({ amount: -1 })
+      .sort({ amount: -1 }) // amount giảm dần
       .limit(5);
 
-    await redisClient.setEx(cacheKey, 60, JSON.stringify(top5));
+    await redisClient.setEx(cacheKey, 60, JSON.stringify(top5)); // cache 60s
     res.json(top5);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
