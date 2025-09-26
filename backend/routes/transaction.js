@@ -4,6 +4,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const {
   createTransaction,
   getTransactions,
+  getTop5Transactions,
   deleteTransaction,
   updateTransaction,
 } = require('../controllers/transactionController');
@@ -108,6 +109,30 @@ router.post('/', authMiddleware, createTransaction);
  *                 $ref: '#/components/schemas/Transaction'
  */
 router.get('/', authMiddleware, getTransactions);
+/**
+ * @swagger
+ * /api/transactions/top5:
+ *   get:
+ *     summary: Get top 5 transactions for authenticated user
+ *     tags: [Transactions]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Top 5 transactions retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Transaction'
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/top5', authMiddleware, getTop5Transactions);
+
 
 /**
  * @swagger
